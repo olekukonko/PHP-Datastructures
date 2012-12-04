@@ -4,15 +4,23 @@ namespace Spl;
 
 use Traversable;
 
-class SortedSet implements Set {
+class SortedSet extends AbstractSet implements Set {
 
     /**
      * @var AvlTree
      */
     private $bst;
 
+    /**
+     * @var callable
+     */
+    private $comparator;
+
+    /**
+     * @param callable $comparator
+     */
     function __construct($comparator = NULL) {
-        $this->bst = new AvlTree($comparator);
+        $this->bst = new AvlTree($this->comparator = $comparator);
     }
 
     /**
@@ -101,6 +109,13 @@ class SortedSet implements Set {
      */
     function getIterator() {
         return new SortedSetIterator($this->bst->getIterator(), $this->count());
+    }
+
+    /**
+     * @return SortedSet
+     */
+    protected function cloneEmpty() {
+        return new self($this->comparator);
     }
 
 }

@@ -4,7 +4,7 @@ namespace Spl;
 
 use Traversable;
 
-class HashSet implements Set {
+class HashSet extends AbstractSet implements Set {
 
     /**
      * @var array
@@ -157,6 +157,13 @@ class HashSet implements Set {
      */
     function getIterator() {
         return new HashSetIterator($this->objects);
+    }
+
+    /**
+     * @return HashSet
+     */
+    protected function cloneEmpty() {
+        return new self($this->hashFunction);
     }
 
 }
