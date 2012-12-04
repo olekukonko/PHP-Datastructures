@@ -44,7 +44,9 @@ class SortedSetTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @depends testRemove
+     * @covers \Spl\SortedSet::add
      * @covers \Spl\SortedSet::contains
+     * @covers \Spl\SortedSet::remove
      */
     function testContains() {
         $set = new SortedSet();
@@ -135,6 +137,21 @@ class SortedSetTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($set->contains(2));
         $this->assertFalse($set->contains(1));
         $this->assertFalse($set->contains(3));
+    }
+
+    /**
+     * @depends testAdd
+     * @covers \Spl\SortedSet::cloneEmpty
+     * @covers \Spl\SortedSet::difference
+     */
+    function testDifferenceSelf() {
+        $a = new SortedSet();
+        $a->add(0);
+
+        $diff = $a->difference($a);
+        $this->assertInstanceOf('Spl\\SortedSet', $diff);
+        $this->assertNotSame($diff, $a);
+        $this->assertCount(0, $diff);
     }
 
     /**

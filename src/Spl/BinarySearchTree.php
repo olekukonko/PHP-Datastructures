@@ -24,6 +24,9 @@ class BinarySearchTree implements Collection {
      */
     protected $comparator;
 
+    /**
+     * @param callable $comparator
+     */
     function __construct($comparator = NULL) {
         $this->comparator = $comparator !== NULL
             ? $comparator
@@ -166,11 +169,12 @@ class BinarySearchTree implements Collection {
     }
 
     /**
-     * @abstract
-     * @return BinaryTree
+     * @return BinaryTree A copy of the current BinaryTree
      */
     function getRoot() {
-        return $this->root;
+        return $this->root !== NULL
+            ? clone $this->root
+            : NULL;
     }
 
     /**

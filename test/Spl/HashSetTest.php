@@ -30,7 +30,7 @@ class HashSetTest extends \PHPUnit_Framework_TestCase {
      * @covers Spl\HashSet::__construct
      */
     function testConstructor() {
-        new HashSet(function($item){
+        new HashSet(function(){
             return 0;
         });
         new HashSet;
@@ -51,6 +51,9 @@ class HashSetTest extends \PHPUnit_Framework_TestCase {
         $set->expects($this->once())
             ->method('__hash');
 
+        /**
+         * @var \Spl\HashSetMock $set
+         */
         $set->hash($set);
     }
 
@@ -204,6 +207,21 @@ class HashSetTest extends \PHPUnit_Framework_TestCase {
         $obj = new HashSet(function($item) {return array($item);});
 
         $obj->remove($obj);
+    }
+
+    /**
+     * @depends testAdd
+     * @covers \Spl\HashSet::cloneEmpty
+     * @covers \Spl\HashSet::difference
+     */
+    function testDifferenceSelf() {
+        $a = new HashSet();
+        $a->add(0);
+
+        $diff = $a->difference($a);
+        $this->assertInstanceOf('Spl\\HashSet', $diff);
+        $this->assertNotSame($diff, $a);
+        $this->assertCount(0, $diff);
     }
 
     /**
