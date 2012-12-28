@@ -23,28 +23,12 @@ interface Set extends Collection {
     function add($item);
 
     /**
-     * @param Traversable $items
-     *
-     * @return void
-     * @throws TypeException when the Traversable includes an item with an incorrect type.
-     */
-    function addAll(Traversable $items);
-
-    /**
      * @param $item
      *
      * @return void
      * @throws TypeException when $item is not the correct type.
      */
     function remove($item);
-
-    /**
-     * @param Traversable $items
-     *
-     * @return mixed
-     * @throws TypeException when the Traversable includes an item with an incorrect type.
-     */
-    function removeAll(Traversable $items);
 
     /**
      * Creates a set that contains the items in the current set that are not
@@ -57,6 +41,19 @@ interface Set extends Collection {
      * @return Set
      */
     function difference(Set $that);
+
+    /**
+     * Creates the set that contains the items in the current set that are not
+     * contained in the provided set, as well as items that are in the
+     * provided set that are not in the current set.
+     *
+     * Formally:
+     * A ⊖ B = {x : x ∈ (A \ B) ∨ (B \ A)}
+     *
+     * @param Set $that
+     * @return Set
+     */
+    function symmetricDifference(Set $that);
 
     /**
      * Creates a new set that contains the items that are in current set that
