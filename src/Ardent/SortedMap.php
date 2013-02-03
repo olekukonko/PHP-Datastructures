@@ -12,9 +12,9 @@ class SortedMap implements Map {
     private $comparator;
 
     function __construct($comparator = NULL) {
-        $this->comparator = $comparator ?: array($this, 'compareStandard');
+        $this->comparator = $comparator ?: [$this, 'compareStandard'];
 
-        $this->avl = new AvlTree(array($this, 'compareKeys'));
+        $this->avl = new AvlTree([$this, 'compareKeys']);
     }
 
     function compareKeys(Pair $a, Pair $b) {
@@ -45,9 +45,9 @@ class SortedMap implements Map {
      * @return bool
      * @throws TypeException when $item is not the correct type.
      */
-    function contains($item, $callback = NULL) {
-        if ($callback === NULL) {
-            $callback = array($this, 'compareStandard');
+    function contains($item, callable $callback = NULL) {
+        if (!isset($callback)) {
+            $callback = [$this, 'compareStandard'];
         }
         foreach ($this->avl as $pair) {
             /**
