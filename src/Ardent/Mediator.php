@@ -8,10 +8,9 @@ interface Mediator {
      * @param string $event
      * @param callable $callable
      *
-     * @throws TypeException if $callable is not callable.
      * @return void
      */
-    function addListener($event, $callable);
+    function addListener($event, callable $callable);
 
     /**
      * @param string $event
@@ -19,25 +18,39 @@ interface Mediator {
      *
      * @return void
      */
-    function removeListener($event, $callable);
+    function removeListener($event, callable $callable);
 
     /**
      * @param string $event
      *
      * @return void
      */
-    function removeListenersForEvent($event);
+    function removeEvent($event);
 
     /**
      * @return void
      */
-    function removeAllListeners();
+    function clear();
 
     /**
-     * @param string$event
+     * @param string $event
+     * @param ... $varargs
+     * @return void
+     */
+    function notify($event, $varargs = NULL);
+
+    /**
+     * Note that this method should not generate warnings or errors when the
+     * provided event does not exist.
      *
-     * @return void
+     * @param string $event
+     * @return array
      */
-    function notify($event);
+    function getListeners($event);
+
+    /**
+     * @return array of event names
+     */
+    function getEvents();
 
 }

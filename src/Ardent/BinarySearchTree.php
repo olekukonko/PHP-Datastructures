@@ -27,58 +27,30 @@ class BinarySearchTree implements Collection {
     /**
      * @param callable $comparator
      */
-    function __construct($comparator = NULL) {
-        $this->comparator = $comparator !== NULL
-            ? $comparator
-            : function($a, $b) {
-                if ($a < $b) {
-                    return -1;
-                } elseif ($b < $a) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            };
+    function __construct(callable $comparator = NULL) {
+        $this->comparator = $comparator ?: [$this, 'compare'];
+    }
+
+    /**
+     * @param $a
+     * @param $b
+     * @return int
+     */
+    function compare($a, $b) {
+        if ($a < $b) {
+            return -1;
+        } elseif ($b < $a) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     /**
      * @param mixed $element
      */
     function add($element) {
-        $this->root = $this->addNode($element, $this->root);
-        $this->cache = NULL;
-    }
-
-    /**
-     * @param $element
-     * @param BinaryTree $node
-     *
-     * @return null|BinaryTree
-     */
-    protected function addNode($element, BinaryTree $node = NULL) {
-        if ($node === NULL) {
-            $this->size++;
-            return new BinaryTree($element);
-        }
-
-        $comparisonResult = call_user_func($this->comparator, $element, $node->getValue());
-
-        if ($comparisonResult < 0) {
-            $node->setLeft($this->addNode($element, $node->getLeft()));
-        } else {
-            if ($comparisonResult > 0) {
-                $node->setRight($this->addNode($element, $node->getRight()));
-            }
-        }
-
-        return $node;
-    }
-
-    /**
-     * @param mixed $element
-     */
-    function remove($element) {
-        $this->root = $this->removeNode($element, $this->root);
+        $this->root = $this->__add($element, $this->root);
         $this->cache = NULL;
     }
 
@@ -88,7 +60,38 @@ class BinarySearchTree implements Collection {
      *
      * @return BinaryTree
      */
-    protected function removeNode($element, BinaryTree $node = NULL) {
+    protected function __add($element, BinaryTree $node = NULL) {
+        if ($node === NULL) {
+            $this->size++;
+            return new BinaryTree($element);
+        }
+
+        $comparisonResult = call_user_func($this->comparator, $element, $node->getValue());
+
+        if ($comparisonResult < 0) {
+            $node->setLeft($this->__add($element, $node->getLeft()));
+        } elseif ($comparisonResult > 0) {
+            $node->setRight($this->__add($element, $node->getRight()));
+        }
+
+        return $node;
+    }
+
+    /**
+     * @param mixed $element
+     */
+    function remove($element) {
+        $this->root = $this->__remove($element, $this->root);
+        $this->cache = NULL;
+    }
+
+    /**
+     * @param $element
+     * @param BinaryTree $node
+     *
+     * @return BinaryTree
+     */
+    protected function __remove($element, BinaryTree $node = NULL) {
         if ($node === NULL) {
             return NULL;
         }
@@ -96,14 +99,12 @@ class BinarySearchTree implements Collection {
         $comparisonResult = call_user_func($this->comparator, $element, $node->getValue());
 
         if ($comparisonResult < 0) {
-            $node->setLeft($this->removeNode($element, $node->getLeft()));
+            $node->setLeft($this->__remove($element, $node->getLeft()));
+        } elseif ($comparisonResult > 0) {
+            $node->setRight($this->__remove($element, $node->getRight()));
         } else {
-            if ($comparisonResult > 0) {
-                $node->setRight($this->removeNode($element, $node->getRight()));
-            } else {
-                //remove the element
-                $node = $this->deleteNode($node);
-            }
+            //remove the element
+            $node = $this->deleteNode($node);
         }
 
         return $node;
@@ -112,10 +113,9 @@ class BinarySearchTree implements Collection {
     /**
      * @param BinaryTree $node
      *
-     * @return null|BinaryTree
+     * @return BinaryTree
      */
     protected function deleteNode(BinaryTree $node) {
-
         if ($node->isLeaf()) {
             $this->size--;
             return NULL;
@@ -123,11 +123,8 @@ class BinarySearchTree implements Collection {
 
         if ($node->hasOnlyOneChild()) {
             $this->size--;
-            $right = $node->getRight();
 
-            $newNode = $right !== NULL
-                ? $right
-                : $node->getLeft();
+            $newNode = $node->getRight() ?: $node->getLeft();
 
             unset($node);
             return $newNode;
@@ -135,7 +132,7 @@ class BinarySearchTree implements Collection {
 
         $value = $node->getInOrderPredecessor()->getValue();
 
-        $node->setLeft($this->removeNode($value, $node->getLeft()));
+        $node->setLeft($this->__remove($value, $node->getLeft()));
 
         $node->setValue($value);
 
@@ -145,27 +142,25 @@ class BinarySearchTree implements Collection {
     /**
      * @param $element
      *
-     * @return mixed|null the element or NULL if it wasn't found.
+     * @return mixed
+     * @throws LookupException
      */
     function get($element) {
-        return $this->getNode($element, $this->root);
-    }
+        $node = $this->root;
 
-    private function getNode($element, BinaryTree $node = NULL) {
-        if ($node === NULL) {
-            return NULL;
+        while ($node !== NULL) {
+            $comparisonResult = call_user_func($this->comparator, $element, $node->getValue());
+
+            if ($comparisonResult < 0) {
+                $node = $node->getLeft();
+            } elseif ($comparisonResult > 0) {
+                $node = $node->getRight();
+            } else {
+                return $node->getValue();
+            }
         }
 
-        $comparisonResult = call_user_func($this->comparator, $element, $node->getValue());
-
-        if ($comparisonResult < 0) {
-            return $this->getNode($element, $node->getLeft());
-        } elseif ($comparisonResult > 0) {
-            return $this->getNode($element, $node->getRight());
-        } else {
-            return $node->getValue();
-        }
-
+        throw new LookupException;
     }
 
     /**
@@ -192,24 +187,20 @@ class BinarySearchTree implements Collection {
      * @throws TypeException when $item is not the correct type.
      */
     function contains($item) {
-        return $this->containsNode($item, $this->root);
-    }
+        $node = $this->root;
+        while ($node !== NULL) {
+            $comparisonResult = call_user_func($this->comparator, $item, $node->getValue());
 
-    protected function containsNode($element, BinaryTree $node = NULL) {
-        if ($node === NULL) {
-            return FALSE;
+            if ($comparisonResult < 0) {
+                $node = $node->getLeft();
+            } elseif ($comparisonResult > 0) {
+                $node = $node->getRight();
+            } else {
+                return TRUE;
+            }
         }
 
-        $comparisonResult = call_user_func($this->comparator, $element, $node->getValue());
-
-        if ($comparisonResult < 0) {
-            return $this->containsNode($element, $node->getLeft());
-        } elseif ($comparisonResult > 0) {
-            return $this->containsNode($element, $node->getRight());
-        } else {
-            return TRUE;
-        }
-
+        return FALSE;
     }
 
     /**
