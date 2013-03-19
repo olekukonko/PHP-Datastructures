@@ -2,9 +2,16 @@
 
 namespace Ardent;
 
+use Ardent\Exception\EmptyException;
+use Ardent\Exception\FullException;
+use Ardent\Exception\IndexException;
+use Ardent\Exception\TypeException;
+use Ardent\Iterator\LinkedListIterator;
 use ArrayAccess;
 
-class LinkedList implements ArrayAccess, Collection {
+class LinkedList implements ArrayAccess, \IteratorAggregate, Collection {
+
+    use StructureCollection;
 
     /**
      * @var LinkedNode
@@ -41,7 +48,6 @@ class LinkedList implements ArrayAccess, Collection {
         $this->currentNode = $that->currentNode;
         $this->currentOffset = $that->currentOffset;
     }
-
     /**
      * @param mixed $value
      * @param callable $callback [optional]
@@ -49,7 +55,7 @@ class LinkedList implements ArrayAccess, Collection {
      * @return bool
      * @throws TypeException when $object is not the correct type.
      */
-    function contains($value, callable $callback = NULL) {
+    function containsItem($value, callable $callback = NULL) {
         if ($this->head === NULL) {
             return FALSE;
         }
@@ -58,7 +64,7 @@ class LinkedList implements ArrayAccess, Collection {
     }
 
     /**
-     * @param $value
+     * @param mixed $value
      * @param callable $callback [optional]
      * @return int
      */
@@ -67,15 +73,18 @@ class LinkedList implements ArrayAccess, Collection {
             return -1;
         }
 
-        $areEqual = $callback ?: [$this, '__equals'];
+        /**
+         * @var callable $callback
+         */
+        $callback = $callback ?: [$this, '__equals'];
 
-        if (call_user_func($areEqual, $this->currentNode->value, $value)) {
+        if ($callback($value, $this->currentNode->value)) {
             return $this->currentOffset;
         }
 
         $offset = 0;
         for ($node = $this->head; $node !== NULL; $node = $node->next, $offset++) {
-            if (call_user_func($areEqual, $value, $node->value)) {
+            if ($callback($value, $node->value)) {
                 $this->currentOffset = $offset;
                 $this->currentNode = $node;
                 return $offset;
@@ -327,57 +336,6 @@ class LinkedList implements ArrayAccess, Collection {
         $this->currentOffset++;
         $this->size++;
 
-    }
-
-    /**
-     * @param int $start
-     * @param int $count
-     * @return LinkedList
-     * @throws EmptyException
-     * @throws IndexException
-     * @throws TypeException
-     */
-    function slice($start, $count = NULL) {
-        if ($this->isEmpty()) {
-            throw new EmptyException;
-        }
-        if (filter_var($start, FILTER_VALIDATE_INT) === FALSE) {
-            throw new TypeException(
-                'Argument 1 of LinkedList::slice must be an integer'
-            );
-        }
-        if ($count !== NULL && filter_var($count, FILTER_VALIDATE_INT) === FALSE) {
-            throw new TypeException(
-                'If used, argument 2 of LinkedList::slice must be an integer'
-            );
-        }
-        if ($start >= $this->size) {
-            throw new IndexException(
-                'Argument 1 of LinkedList::slice cannot be greater than or equal to the list size'
-            );
-        }
-        if ($start < (-1 * $this->size)) {
-            throw new IndexException(
-                'Argument 1 of LinkedList::slice cannot be smaller than the lists negative size'
-            );
-        }
-
-        if ($start < 0) {
-            // add because start is a negative number
-            $start = $this->size + $start;
-        }
-
-        $stop = $start + $count;
-
-        if ($count < 0) {
-            //add because $count is negative
-            $stop = $this->size + $count;
-        } elseif ($count === NULL || $stop > $this->size) {
-            $stop = $this->size;
-        }
-
-
-        return $this->copyRange($start, $stop);
     }
 
     /**

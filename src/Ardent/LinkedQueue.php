@@ -2,7 +2,15 @@
 
 namespace Ardent;
 
+use Ardent\Exception\EmptyException;
+use Ardent\Exception\FullException;
+use Ardent\Exception\TypeException;
+use Ardent\Iterator\LinkedQueueIterator;
+use Ardent\Iterator\QueueIterator;
+
 class LinkedQueue implements Queue {
+
+    use StructureCollection;
 
     /**
      * @var Pair

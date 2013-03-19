@@ -5,7 +5,7 @@ namespace Ardent;
 class HashMapTest extends \PHPUnit_Framework_TestCase {
 
     /**
-     * @expectedException \Ardent\KeyException
+     * @expectedException \Ardent\Exception\KeyException
      */
     function testGetException() {
         $map = new HashMap();
@@ -13,7 +13,7 @@ class HashMapTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Ardent\KeyException
+     * @expectedException \Ardent\Exception\KeyException
      */
     function testOffsetGetException() {
         $map = new HashMap();
@@ -112,21 +112,21 @@ class HashMapTest extends \PHPUnit_Framework_TestCase {
      */
     function testContains() {
         $map = new HashMap();
-        $this->assertFalse($map->contains(1));
+        $this->assertFalse($map->containsItem(1));
 
         $map[0] = 2;
-        $this->assertFalse($map->contains(0));
-        $this->assertTrue($map->contains(2));
+        $this->assertFalse($map->containsItem(0));
+        $this->assertTrue($map->containsItem(2));
 
         $map[2] = 4;
-        $this->assertTrue($map->contains(2));
-        $this->assertTrue($map->contains(4));
+        $this->assertTrue($map->containsItem(2));
+        $this->assertTrue($map->containsItem(4));
 
         unset($map[0]);
 
-        $this->assertFalse($map->contains(0));
-        $this->assertFalse($map->contains(2));
-        $this->assertTrue($map->contains(4));
+        $this->assertFalse($map->containsItem(0));
+        $this->assertFalse($map->containsItem(2));
+        $this->assertTrue($map->containsItem(4));
     }
 
     /**
@@ -178,7 +178,7 @@ class HashMapTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(1, $map->get($object));
 
         $copy = clone $object;
-        $this->assertFalse($map->contains($copy));
+        $this->assertFalse($map->containsItem($copy));
     }
 
     /**
@@ -196,7 +196,7 @@ class HashMapTest extends \PHPUnit_Framework_TestCase {
     function testIteratorEmpty() {
         $map = new HashMap();
         $iterator = $map->getIterator();
-        $this->assertInstanceOf('\\Ardent\\HashMapIterator', $iterator);
+        $this->assertInstanceOf('\\Ardent\\Iterator\\HashMapIterator', $iterator);
         $this->assertCount(0, $iterator);
 
         $iterator->rewind();

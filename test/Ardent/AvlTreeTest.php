@@ -309,26 +309,26 @@ class AvlTreeTest extends \PHPUnit_Framework_TestCase {
 
     function testContains() {
         $object = new AvlTree();
-        $this->assertFalse($object->contains(1));
+        $this->assertFalse($object->containsItem(1));
 
         $object->add(1);
-        $this->assertTrue($object->contains(1));
+        $this->assertTrue($object->containsItem(1));
     }
 
     function testContainsRightSubTree() {
         $object = new AvlTree();
         $object->add(2);
         $object->add(3);
-        $this->assertTrue($object->contains(3));
-        $this->assertFalse($object->contains(1));
+        $this->assertTrue($object->containsItem(3));
+        $this->assertFalse($object->containsItem(1));
     }
 
     function testContainsLeftSubTree() {
         $object = new AvlTree();
         $object->add(2);
         $object->add(1);
-        $this->assertTrue($object->contains(1));
-        $this->assertFalse($object->contains(3));
+        $this->assertTrue($object->containsItem(1));
+        $this->assertFalse($object->containsItem(3));
     }
 
     function testGet() {
@@ -352,7 +352,7 @@ class AvlTreeTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Ardent\LookupException
+     * @expectedException \Ardent\Exception\LookupException
      */
     function testGetMissingGreaterThan() {
         $object = new AvlTree();
@@ -362,7 +362,7 @@ class AvlTreeTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Ardent\LookupException
+     * @expectedException \Ardent\Exception\LookupException
      */
     function testGetMissingSmallerThan() {
         $object = new AvlTree();
@@ -374,7 +374,20 @@ class AvlTreeTest extends \PHPUnit_Framework_TestCase {
         $object = new AvlTree();
         $iterator = $object->getIterator();
 
-        $this->assertInstanceOf('\\Ardent\\InOrderIterator', $iterator);
+        $this->assertInstanceOf('\\Ardent\\Iterator\\InOrderIterator', $iterator);
+    }
+
+    /**
+     * @depends testDefaultIterator
+     */
+    function testIteratorCount() {
+        $object = new AvlTree();
+        $object->add(0);
+        $object->add(4);
+        $object->add(2);
+        $object->add(3);
+        $iterator = $object->getIterator();
+        $this->assertCount(4, $iterator);
     }
 
     function testEmptyTreeIterators() {
@@ -391,7 +404,7 @@ class AvlTreeTest extends \PHPUnit_Framework_TestCase {
             /**
              * @var \Iterator $iterator
              */
-            $this->assertInstanceOf("\\Ardent\\{$algorithm}Iterator", $iterator);
+            $this->assertInstanceOf("\\Ardent\\Iterator\\{$algorithm}Iterator", $iterator);
 
             $iterator->rewind();
             $this->assertFalse($iterator->valid());

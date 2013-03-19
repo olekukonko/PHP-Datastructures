@@ -2,16 +2,11 @@
 
 namespace Ardent;
 
+use Ardent\Iterator\InOrderIterator;
+use Ardent\Iterator\SortedMapIterator;
+
 class SortedMapTest extends \PHPUnit_Framework_TestCase {
 
-    /**
-     * @covers \Ardent\SortedMap::insert
-     * @covers \Ardent\SortedMap::get
-     * @covers \Ardent\SortedMap::offsetSet
-     * @covers \Ardent\SortedMap::offsetGet
-     * @covers \Ardent\SortedMap::offsetExists
-     * @covers \Ardent\SortedMap::count
-     */
     function testOffsetSet() {
         $map = new SortedMap();
         $this->assertCount(0, $map);
@@ -46,8 +41,6 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @depends testOffsetSet
-     * @covers \Ardent\SortedMap::offsetUnset
-     * @covers \Ardent\SortedMap::remove
      */
     function testOffsetUnset() {
         $map = new SortedMap();
@@ -61,7 +54,6 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
     /**
      * @depends testOffsetSet
      * @depends testOffsetUnset
-     * @covers \Ardent\SortedMap::isEmpty
      */
     function testIsEmpty() {
         $map = new SortedMap();
@@ -75,8 +67,7 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @covers \Ardent\SortedMap::offsetGet
-     * @expectedException \Ardent\KeyException
+     * @expectedException \Ardent\Exception\KeyException
      */
     function testOffsetGetNotSetKey() {
         $map = new SortedMap();
@@ -84,8 +75,7 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @covers \Ardent\SortedMap::get
-     * @expectedException \Ardent\KeyException
+     * @expectedException \Ardent\Exception\KeyException
      */
     function testGetNotSetKey() {
         $map = new SortedMap();
@@ -95,8 +85,7 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
     /**
      * @depends testOffsetSet
      * @depends testOffsetUnset
-     * @covers \Ardent\SortedMap::offsetGet
-     * @expectedException \Ardent\KeyException
+     * @expectedException \Ardent\Exception\KeyException
      */
     function testOffsetGetUnsetKey() {
         $map = new SortedMap();
@@ -108,8 +97,7 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
     /**
      * @depends testOffsetSet
      * @depends testOffsetUnset
-     * @covers \Ardent\SortedMap::get
-     * @expectedException \Ardent\KeyException
+     * @expectedException \Ardent\Exception\KeyException
      */
     function testGetUnsetKey() {
         $map = new SortedMap();
@@ -120,24 +108,19 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @depends testOffsetSet
-     * @covers \Ardent\SortedMap::contains
      */
     function testContains() {
         $map = new SortedMap();
 
-        $this->assertFalse($map->contains(0));
+        $this->assertFalse($map->containsItem(0));
 
         $map[0] = 1;
-        $this->assertFalse($map->contains(0));
-        $this->assertTrue($map->contains(1));
+        $this->assertFalse($map->containsItem(0));
+        $this->assertTrue($map->containsItem(1));
     }
 
     /**
      * @depends testOffsetSet
-     * @covers \Ardent\SortedMap::offsetExists
-     * @covers \Ardent\SortedMap::compareStandard
-     * @covers \Ardent\SortedMap::compareKeys
-     * @covers \Ardent\SortedMap::__construct
      */
     function testOffsetExists() {
         $map = new SortedMap();
@@ -156,9 +139,6 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @depends testOffsetSet
-     * @covers \Ardent\SortedMap::clear
-     * @covers \Ardent\SortedMap::count
-     * @covers \Ardent\SortedMap::isEmpty
      */
     function testClear() {
         $map = new SortedMap();
@@ -172,7 +152,6 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
     /**
      * @depends testOffsetSet
      * @depends testOffsetExists
-     * @covers \Ardent\SortedMap::__construct
      */
     function test__construct() {
         $map = new SortedMap(function ($a, $b) {
@@ -211,7 +190,7 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
 
         $iterator = $map->getIterator();
 
-        $this->assertInstanceOf('Ardent\\SortedMapIterator', $iterator);
+        $this->assertInstanceOf('Ardent\\Iterator\\SortedMapIterator', $iterator);
         $this->assertCount(count($map), $iterator);
 
         $iterator->rewind();
@@ -238,7 +217,7 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Ardent\TypeException
+     * @expectedException \Ardent\Exception\TypeException
      */
     function testBadIteratorKey() {
         $tree = new BinaryTree(0);
@@ -250,7 +229,7 @@ class SortedMapTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Ardent\TypeException
+     * @expectedException \Ardent\Exception\TypeException
      */
     function testBadIteratorCurrent() {
         $tree = new BinaryTree(0);

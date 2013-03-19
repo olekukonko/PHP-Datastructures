@@ -2,17 +2,11 @@
 
 namespace Ardent;
 
+use Ardent\Exception\KeyException;
+use Ardent\Exception\TypeException;
 use ArrayAccess;
 
-interface Map extends ArrayAccess, Collection {
-
-    /**
-     * @param $item
-     *
-     * @return bool
-     * @throws TypeException when $item is not the correct type.
-     */
-    function contains($item);
+interface Map extends ArrayAccess, \IteratorAggregate, Collection {
 
     /**
      * @param $key

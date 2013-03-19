@@ -2,7 +2,13 @@
 
 namespace Ardent;
 
+use Ardent\Exception\FunctionException;
+use Ardent\Exception\TypeException;
+use Ardent\Iterator\HashSetIterator;
+
 class HashSet extends AbstractSet implements Set {
+
+    use StructureCollection;
 
     /**
      * @var array
@@ -21,6 +27,26 @@ class HashSet extends AbstractSet implements Set {
      */
     function __construct(callable $hashFunction = NULL) {
         $this->hashFunction = $hashFunction ?: [$this, 'hash'];
+    }
+
+    /**
+     * @param $item
+     *
+     * @return bool
+     * @throws FunctionException when the hashing function returns an improper value.
+     * @throws TypeException when $item is not the correct type.
+     */
+    function containsItem($item) {
+        $hash = call_user_func($this->hashFunction, $item);
+
+        if (!is_scalar($hash)) {
+            throw new FunctionException(
+                'Hashing function must return a scalar value'
+            );
+        }
+
+        return array_key_exists($hash, $this->objects);
+
     }
 
     /**
@@ -47,25 +73,6 @@ class HashSet extends AbstractSet implements Set {
      */
     function clear() {
         $this->objects = [];
-    }
-
-    /**
-     * @param $item
-     *
-     * @return bool
-     * @throws FunctionException when the hashing function returns an improper value.
-     * @throws TypeException when $item is not the correct type.
-     */
-    function contains($item) {
-        $hash = call_user_func($this->hashFunction, $item);
-
-        if (!is_scalar($hash)) {
-            throw new FunctionException(
-                'Hashing function must return a scalar value'
-            );
-        }
-
-        return array_key_exists($hash, $this->objects);
     }
 
     /**

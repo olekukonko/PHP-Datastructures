@@ -2,7 +2,13 @@
 
 namespace Ardent;
 
+use Ardent\Exception\KeyException;
+use Ardent\Exception\TypeException;
+use Ardent\Iterator\SortedMapIterator;
+
 class SortedMap implements Map {
+
+    use StructureCollection;
 
     private $avl;
 
@@ -45,8 +51,8 @@ class SortedMap implements Map {
      * @return bool
      * @throws TypeException when $item is not the correct type.
      */
-    function contains($item, callable $callback = NULL) {
-        if (!isset($callback)) {
+    function containsItem($item, callable $callback = NULL) {
+        if ($callback === NULL) {
             $callback = [$this, 'compareStandard'];
         }
         foreach ($this->avl as $pair) {
@@ -76,7 +82,7 @@ class SortedMap implements Map {
      * @return bool
      */
     function offsetExists($offset) {
-        return $this->avl->contains(new Pair($offset, NULL));
+        return $this->avl->containsItem(new Pair($offset, NULL));
     }
 
     /**
