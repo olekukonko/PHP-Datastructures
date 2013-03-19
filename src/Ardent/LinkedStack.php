@@ -2,7 +2,15 @@
 
 namespace Ardent;
 
+use Ardent\Exception\EmptyException;
+use Ardent\Exception\FullException;
+use Ardent\Exception\TypeException;
+use Ardent\Iterator\LinkedStackIterator;
+use Ardent\Iterator\StackIterator;
+
 class LinkedStack implements Stack {
+
+    use StructureCollection;
 
     /**
      * @var Pair

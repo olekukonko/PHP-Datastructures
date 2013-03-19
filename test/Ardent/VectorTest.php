@@ -32,11 +32,14 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
      * @covers \Ardent\Vector::contains
      */
     function testContains() {
-        $this->assertFalse($this->object->contains(1));
+        $contains1 = function ($item) {
+           return $item == 1;
+        };
+        $this->assertFalse($this->object->contains($contains1));
 
         $this->object->append(1);
 
-        $this->assertTrue($this->object->contains(1));
+        $this->assertTrue($this->object->contains($contains1));
     }
 
     /**
@@ -64,7 +67,7 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @covers \Ardent\Vector::offsetGet
-     * @expectedException \Ardent\IndexException
+     * @expectedException \Ardent\Exception\IndexException
      */
     function testOffsetGetOutOfBoundsException() {
         $this->object[0];
@@ -72,7 +75,7 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @covers \Ardent\Vector::offsetGet
-     * @expectedException \Ardent\TypeException
+     * @expectedException \Ardent\Exception\TypeException
      */
     function testOffsetGetTypeException() {
 
@@ -100,6 +103,24 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
         $this->assertCount(0, $this->object);
     }
 
+    function testAppendAll() {
+        $data = [0, 2, 4, 6];
+        $traversable = new \ArrayIterator($data);
+
+        $vector = new Vector;
+        $vector->append(0);
+        $vector->appendAll($traversable);
+        $this->assertCount(5, $vector);
+
+        $i = 0;
+        $expect = [0, 0, 2, 4, 6];
+        foreach ($vector as $key => $value) {
+            $this->assertEquals($i, $key);
+            $this->assertEquals($expect[$i], $value);
+            $i++;
+        }
+        $this->assertEquals(count($expect), $i);
+    }
 
     /**
      * @covers \Ardent\Vector::append
@@ -133,7 +154,7 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @covers \Ardent\Vector::get
-     * @expectedException \Ardent\TypeException
+     * @expectedException \Ardent\Exception\TypeException
      */
     function testGetNonInteger() {
         $vector = new Vector();
@@ -142,7 +163,7 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @covers \Ardent\Vector::get
-     * @expectedException \Ardent\IndexException
+     * @expectedException \Ardent\Exception\IndexException
      */
     function testGetNonExistentOffset() {
         $vector = new Vector();
@@ -165,7 +186,7 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @covers \Ardent\Vector::set
-     * @expectedException \Ardent\TypeException
+     * @expectedException \Ardent\Exception\TypeException
      */
     function testSetNonInteger() {
         $vector = new Vector();
@@ -174,7 +195,7 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @covers \Ardent\Vector::set
-     * @expectedException \Ardent\IndexException
+     * @expectedException \Ardent\Exception\IndexException
      */
     function testSetNonExistentOffset() {
         $vector = new Vector();
@@ -207,7 +228,7 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @covers \Ardent\Vector::remove
-     * @expectedException \Ardent\TypeException
+     * @expectedException \Ardent\Exception\TypeException
      */
     function testRemoveNonInteger() {
         $vector = new Vector();
@@ -237,101 +258,204 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(4, $array[1]);
     }
 
-    /**
-     * @covers \Ardent\Vector::filter
-     */
-    function testFilter() {
-        $vector = new VectorMock();
-        $array =& $vector->getInnerArray();
-
-        for ($i = 0; $i < 5; $i++) {
-            $array[$i] = $i;
-        }
-
-        $filtered = $vector->filter(function() {return TRUE;});
-        $this->assertInstanceOf('Ardent\\Vector', $filtered);
-        for ($i = 0; $i < 5; $i++) {
-            $this->assertEquals($i, $array[$i]);
-            $this->assertEquals($i, $filtered[$i]);
-        }
-
-        $filtered = $vector->filter(function($item, $index) {return $index % 2;});
-        $this->assertInstanceOf('Ardent\\Vector', $filtered);
-        $this->assertCount(2, $filtered);
-        for ($i = 0, $j = 1; $i < 2; $i++, $j += 2) {
-            $this->assertEquals($j, $filtered[$i]);
-        }
-
-    }
-
-    /**
-     * @depends testGet
-     * @covers \Ardent\Vector::slice
-     */
-    function testSlice() {
-        $vector = new VectorMock(0,1,2,3);
-
-        $slice = $vector->slice(1);
-        $this->assertInstanceOf('Ardent\\Vector', $slice);
-        $this->assertCount(3, $slice);
-        for ($i = 0; $i < 3; $i++) {
-            $this->assertEquals($i+1, $slice[$i]);
-        }
-
-        $slice = $vector->slice(0, 1);
-        $this->assertInstanceOf('Ardent\\Vector', $slice);
-        $this->assertCount(1, $slice);
-        $this->assertEquals(0, $slice[0]);
-    }
-
-    /**
-     * @covers \Ardent\Vector::slice
-     * @expectedException \Ardent\EmptyException
-     */
-    function testSliceEmpty() {
+    function testMapToArray() {
+        $map = [1, 2, 3, 4];
         $vector = new Vector();
-        $vector->slice(0);
+        $vector->appendAll(new \ArrayIterator($map));
+
+        $this->assertEquals($map, $vector->toArray());
+        $this->assertEquals($map, $vector->toArray(TRUE));
     }
 
-    /**
-     * @covers \Ardent\Vector::slice
-     * @expectedException \Ardent\TypeException
-     */
-    function testSliceNonIntegerStart() {
+    function testContainsEmpty() {
+        $vector = new Vector();
+        $this->assertFalse($vector->contains(function () {
+            return TRUE;
+        }));
+    }
+
+    function testContainsFalse() {
+        $vector = new Vector(1, 2, 3, 4, 5);
+        $this->assertFalse($vector->contains(function ($val) {
+            return $val === 0;
+        }));
+    }
+
+    function testContainsFirst() {
+        $vector = new Vector(1, 2, 3, 4, 5);
+        $this->assertTrue($vector->contains(function ($val) {
+            return $val === 1;
+        }));
+    }
+
+    function testContainsMiddle() {
+        $vector = new Vector(1, 2, 3, 4, 5);
+        $this->assertTrue($vector->contains(function ($val) {
+            return $val === 3;
+        }));
+    }
+
+    function testContainsLast() {
+        $vector = new Vector(1, 2, 3, 4, 5);
+        $this->assertTrue($vector->contains(function ($val) {
+            return $val === 5;
+        }));
+    }
+
+    function testEachEmpty() {
+        $vector = new Vector();
+        $i = 0;
+        $vector->each(function ($val) use (&$i) {
+            $i += $val;
+        });
+
+        $this->assertEquals(0, $i);
+    }
+
+    function testEach() {
+        $vector = new Vector(1, 2, 3);
+
+        $k = '';
+        $v = 0;
+        $vector->each(function ($val, $key) use (&$v, &$k) {
+            $k .= $key;
+            $v += $val;
+        });
+
+        $this->assertEquals('012', $k);
+        $this->assertEquals(6, $v);
+    }
+
+    function testEveryEmpty() {
+        $vector = new Vector();
+        $this->assertTrue($vector->every('is_null'));
+    }
+
+    function testEverySome() {
+        $vector = new Vector(NULL, NULL, 0);
+        $this->assertFalse($vector->every(function ($val) { return $val === NULL;}));
+    }
+
+    function testEvery() {
+        $vector = new Vector(NULL, NULL, NULL);
+        $this->assertTrue($vector->every(function ($val) { return $val === NULL;}));
+    }
+
+    function testJoinEmpty() {
+        $vector = new Vector();
+        $this->assertEquals('', $vector->join(','));
+    }
+
+    function testJoinSingle() {
         $vector = new Vector(0);
-        $vector->slice(array());
+        $this->assertEquals('0', $vector->join(','));
     }
 
-    /**
-     * @covers \Ardent\Vector::slice
-     * @expectedException \Ardent\TypeException
-     */
-    function testSliceNonIntegerCount() {
+    function testJoinMultiple() {
+        $vector = new Vector(0, 2, 4);
+        $this->assertEquals('0, 2, 4', $vector->join(', '));
+    }
+
+    function testLimit() {
         $vector = new Vector(0);
-        $vector->slice(0, array());
+        $this->assertInstanceOf(
+            'Ardent\\Iterator\\LimitingIterator',
+            $vector->limit(0)
+        );
     }
 
-    /**
-     * @covers \Ardent\Vector::slice
-     * @expectedException \Ardent\IndexException
-     */
-    function testSliceStartGreaterThanCount() {
+    function testMaxEmpty() {
+        $vector = new Vector();
+        $this->assertNull($vector->max(function() {return 1;}));
+    }
+
+    function testMax() {
+        $vector = new Vector(0, 5, 3, 8);
+        $this->assertEquals(8, $vector->max());
+    }
+
+    function testMinEmpty() {
+        $vector = new Vector();
+        $this->assertNull($vector->min(function() {return 1;}));
+    }
+
+    function testMin() {
+        $vector = new Vector(0, 5, 3, 8);
+        $this->assertEquals(0, $vector->min());
+    }
+
+    function testMap() {
         $vector = new Vector(0);
-        $vector->slice(1);
+        $this->assertInstanceOf(
+            'Ardent\\Iterator\\MappingIterator',
+            $vector->map(function() {})
+        );
     }
 
-    /**
-     * @covers \Ardent\Vector::slice
-     * @expectedException \Ardent\IndexException
-     */
-    function testSliceStartLessThanNegativeCount() {
+    function testNoneMatchedSome() {
+        $vector = new Vector(0, 5, 3, -5);
+        $none = $vector->none(function ($value, $key) {
+            return $value < 3;
+        });
+        $this->assertFalse($none);
+    }
+
+    function testNoneFalse() {
+        $vector = new Vector(0, 5, 3, -5);
+        $none = $vector->none(function ($value, $key) {
+            return $value < 0;
+        });
+        $this->assertFalse($none);
+    }
+
+    function testNoneTrue() {
+        $vector = new Vector(0, 5, 3, 8);
+        $none = $vector->none(function ($value, $key) {
+            return $value < 0;
+        });
+        $this->assertTrue($none);
+    }
+
+    function testReduceEmpty() {
+        $vector = new Vector();
+        $max = $vector->reduce(10, 'max');
+        $this->assertEquals(10, $max);
+    }
+
+    function testReduceInitialIsMax() {
+        $vector = new Vector(0, 5);
+        $max = $vector->reduce(10, 'max');
+        $this->assertEquals(10, $max);
+    }
+
+    function testReduce() {
+        $vector = new Vector(0, 5);
+        $max = $vector->reduce(-5, 'max');
+        $this->assertEquals(5, $max);
+    }
+
+    function testSlice() {
+        $vector = new Vector(0, 5);
+        $slicer = $vector->slice(0, 1);
+        $this->assertInstanceOf('Ardent\\Iterator\\SlicingIterator', $slicer);
+    }
+
+    function testSkip() {
+        $vector = new Vector([0]);
+        $this->assertInstanceOf(
+            'Ardent\\Iterator\\SkippingIterator',
+            $vector->skip(0)
+        );
+    }
+
+    function testWhere() {
         $vector = new Vector(0);
-        $vector->slice(-2);
+        $this->assertInstanceOf(
+            'Ardent\\Iterator\\FilteringIterator',
+            $vector->where(function () {})
+        );
     }
 
-    /**
-     * @covers \Ardent\Vector::toArray
-     */
     function testToArray() {
         $emptyArray = $this->object->toArray();
         $this->assertTrue(is_array($emptyArray));
@@ -346,30 +470,6 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
         $this->assertCount(3, $notEmptyArray);
     }
 
-    /**
-     * @covers \Ardent\Vector::map
-     */
-    function testMap() {
-        $vector = new Vector(0, 1, 2, 3);
-        $size = $vector->count();
-
-        $doubleValue = function ($value) {
-            return $value * 2;
-        };
-
-        $map = $vector->map($doubleValue);
-
-        $this->assertInstanceOf('Ardent\\Vector', $map);
-        $this->assertCount(4, $map);
-
-        for ($i = 0; $i < $size; $i++) {
-            $this->assertEquals($doubleValue($vector[$i]), $map[$i]);
-        }
-    }
-
-    /**
-     * @covers \Ardent\Vector::apply
-     */
     function testApply() {
         $vector = new Vector(0, 1, 2, 3);
         $size = $vector->count();
@@ -390,14 +490,6 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @depends testAppend
-     * @covers \Ardent\Vector::getIterator
-     * @covers \Ardent\VectorIterator::__construct
-     * @covers \Ardent\VectorIterator::rewind
-     * @covers \Ardent\VectorIterator::valid
-     * @covers \Ardent\VectorIterator::key
-     * @covers \Ardent\VectorIterator::current
-     * @covers \Ardent\VectorIterator::next
-     * @covers \Ardent\VectorIterator::count
      */
     function testIterator() {
         $this->object->append(1);
@@ -407,7 +499,7 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
 
         $iterator = $this->object->getIterator();
-        $this->assertInstanceOf('\\Ardent\\VectorIterator', $iterator);
+        $this->assertInstanceOf('\\Ardent\\Iterator\\VectorIterator', $iterator);
         $this->assertCount(count($this->object), $iterator);
 
         for ($i = 0; $i < count($this->object); $i++) {
@@ -432,7 +524,6 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @depends testIterator
-     * @covers \Ardent\VectorIterator::seek
      */
     function testIteratorSeek() {
         $this->object->append(1);
@@ -473,8 +564,7 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @depends testIterator
-     * @covers \Ardent\VectorIterator::seek
-     * @expectedException \Ardent\IndexException
+     * @expectedException \Ardent\Exception\IndexException
      */
     function testIteratorSeekNegative() {
         $this->object->append(0);
@@ -485,8 +575,7 @@ class VectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @depends testIterator
-     * @covers \Ardent\VectorIterator::seek
-     * @expectedException \Ardent\IndexException
+     * @expectedException \Ardent\Exception\IndexException
      */
     function testIteratorSeekBeyondEnd() {
         $this->object->append(0);

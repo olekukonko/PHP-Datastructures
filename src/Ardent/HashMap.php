@@ -2,7 +2,13 @@
 
 namespace Ardent;
 
+use Ardent\Exception\KeyException;
+use Ardent\Exception\TypeException;
+use Ardent\Iterator\HashMapIterator;
+
 class HashMap implements Map {
+
+    use StructureCollection;
 
     private $storage = [];
 
@@ -109,7 +115,7 @@ class HashMap implements Map {
      * @return bool
      * @throws TypeException when $item is not the correct type.
      */
-    function contains($item, callable $comparator = NULL) {
+    function containsItem($item, callable $comparator = NULL) {
         $compare = $comparator ?: [$this, 'areEqual'];
 
         $storage = $this->storage;
