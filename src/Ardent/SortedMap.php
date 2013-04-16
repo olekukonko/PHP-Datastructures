@@ -2,9 +2,10 @@
 
 namespace Ardent;
 
-use Ardent\Exception\KeyException;
-use Ardent\Exception\TypeException;
-use Ardent\Iterator\SortedMapIterator;
+use Ardent\Exception\EmptyException,
+    Ardent\Exception\KeyException,
+    Ardent\Exception\TypeException,
+    Ardent\Iterator\SortedMapIterator;
 
 class SortedMap implements Map {
 
@@ -72,6 +73,22 @@ class SortedMap implements Map {
      */
     function isEmpty() {
         return $this->avl->isEmpty();
+    }
+
+    /** 
+     * @return mixed
+     * @throws EmptyException when the tree is empty
+     */
+    function findFirst() {
+        return $this->avl->findFirst();
+    }
+
+    /** 
+     * @return mixed
+     * @throws EmptyException when the tree is empty
+     */
+    function findLast() {
+        return $this->avl->findLast();
     }
 
     /**
@@ -143,6 +160,9 @@ class SortedMap implements Map {
     }
 
     /**
+     * Note that if the key is considered equal to an already existing key in
+     * the map that it's value will be replaced with the new one.
+     *
      * @param $key
      * @param mixed $value
      *
